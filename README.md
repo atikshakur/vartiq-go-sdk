@@ -5,7 +5,7 @@ A Go SDK for interacting with the Vartiq API. Supports Project, App, Webhook, an
 ## Installation
 
 ```sh
-go get github.com/yourusername/vartiq-go-sdk
+go get github.com/vartiqhq/vartiq-go-sdk
 ```
 
 ## Usage
@@ -14,7 +14,7 @@ go get github.com/yourusername/vartiq-go-sdk
 
 ```go
 import (
-	"github.com/yourusername/vartiq-go-sdk/vartiq"
+	"github.com/vartiqhq/vartiq-go-sdk/vartiq"
 )
 
 client := vartiq.New("YOUR_API_KEY")
@@ -28,7 +28,7 @@ You can import types for strong typing:
 
 ```go
 import (
-	"github.com/yourusername/vartiq-go-sdk/vartiq"
+	"github.com/vartiqhq/vartiq-go-sdk/vartiq"
 )
 // vartiq.Project, vartiq.App, vartiq.Webhook, vartiq.WebhookMessage
 ```
@@ -108,6 +108,58 @@ updated, err := client.Webhook.Update(ctx, "WEBHOOK_ID", map[string]interface{}{
 // Delete a webhook
 err := client.Webhook.Delete(ctx, "WEBHOOK_ID")
 ```
+
+#### Webhook Verification
+
+To verify a webhook signature, you can use the `Verify` method. This is useful for ensuring that incoming webhooks are genuinely from Vartiq and have not been tampered with.
+
+```go
+import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
+	"github.com/vartiqhq/vartiq-go-sdk/vartiq"
+)
+
+// Assuming you have an http.HandlerFunc to receive webhooks
+func handleWebhook(w http.ResponseWriter, req *http.Request) {
+	client := vartiq.New("YOUR_API_KEY") // Or use your existing client instance
+
+	webhookSecret := "YOUR_WEBHOOK_SECRET" // Retrieve your webhook secret securely
+
+	signature := req.Header.Get("X-Vartiq-Signature") // Get the signature from the header
+	if signature == "" {
+		http.Error(w, "Missing signature header", http.StatusBadRequest)
+		return
+	}
+
+	payload, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	defer req.Body.Close()
+
+	verifiedPayload, err := client.Webhook.Verify(payload, signature, webhookSecret)
+	if err != nil {
+		// Signature is invalid
+		fmt.Printf("Webhook verification failed: %v\n", err)
+		http.Error(w, "Signature verification failed", http.StatusUnauthorized)
+		return
+	}
+
+	// Signature is valid, verifiedPayload contains the raw payload bytes
+	fmt.Printf("Webhook verified successfully. Payload: %s\n", string(verifiedPayload))
+
+	// Process the verified payload...
+
+	w.WriteHeader(http.StatusOK)
+}
+```
+
+The `Verify` function returns the original payload bytes if the signature is valid. If the signature is invalid or missing, it returns an error.
 
 ### Webhook Message
 

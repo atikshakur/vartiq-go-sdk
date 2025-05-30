@@ -2,6 +2,12 @@ package vartiq
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
+	"errors"
+	"fmt"
 )
 
 type WebhookService struct {
@@ -9,15 +15,15 @@ type WebhookService struct {
 }
 
 type Webhook struct {
-	ID           string         `json:"id"`
-	Name         string         `json:"name"`
-	URL          string         `json:"url"`
-	AppID        string         `json:"app"`
-	Secret       string         `json:"secret"`
-	CustomHeaders []Header      `json:"customHeaders"`
-	Headers      []Header       `json:"headers"`
-	CreatedAt    string         `json:"createdAt"`
-	UpdatedAt    string         `json:"updatedAt"`
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	URL           string   `json:"url"`
+	AppID         string   `json:"app"`
+	Secret        string   `json:"secret"`
+	CustomHeaders []Header `json:"customHeaders"`
+	Headers       []Header `json:"headers"`
+	CreatedAt     string   `json:"createdAt"`
+	UpdatedAt     string   `json:"updatedAt"`
 }
 
 type Header struct {
@@ -26,9 +32,9 @@ type Header struct {
 }
 
 type CreateWebhookRequest struct {
-	Name         string   `json:"name"`
-	URL          string   `json:"url"`
-	AppID        string   `json:"appId"`
+	Name          string   `json:"name"`
+	URL           string   `json:"url"`
+	AppID         string   `json:"appId"`
 	CustomHeaders []Header `json:"customHeaders,omitempty"`
 }
 
@@ -100,4 +106,30 @@ func (s *WebhookService) Delete(ctx context.Context, webhookID string) error {
 		SetContext(ctx).
 		Delete("/webhooks/" + webhookID)
 	return err
-} 
+}
+
+// Verify checks the signature of a webhook payload.
+// It takes the raw payload bytes, the signature string from the header, and the webhook secret.
+// It returns the payload bytes if the signature is valid, otherwise returns an error.
+func (s *WebhookService) Verify(payload []byte, signature, secret string) ([]byte, error) {
+	if signature == "" {
+		return nil, errors.New("signature header is missing")
+	}
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write(payload)
+	expectedSignature := mac.Sum(nil)
+
+	// Assuming the signature is hex encoded
+	receivedSignature, err := hex.DecodeString(signature)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode signature: %w", err)
+	}
+
+	// Use constant-time comparison to prevent timing attacks
+	if subtle.ConstantTimeCompare(receivedSignature, expectedSignature) != 1 {
+		return nil, errors.New("signature verification failed")
+	}
+
+	return payload, nil
+}
