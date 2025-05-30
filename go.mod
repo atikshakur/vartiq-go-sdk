@@ -1,4 +1,4 @@
-module github.com/yourusername/vartiq-go-sdk
+module github.com/vartiqhq/vartiq-go-sdk
 
 go 1.21
 
