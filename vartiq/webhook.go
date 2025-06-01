@@ -14,16 +14,35 @@ type WebhookService struct {
 	client *Client
 }
 
+type AuthMethod string
+
+const (
+	AuthMethodAPIKey AuthMethod = "apiKey"
+	AuthMethodBasic  AuthMethod = "basic"
+	AuthMethodHMAC   AuthMethod = "hmac"
+)
+
+type WebhookAuth struct {
+	Method       AuthMethod `json:"method"`
+	UserName     string     `json:"userName,omitempty"`
+	Password     string     `json:"password,omitempty"`
+	APIKey       string     `json:"apiKey,omitempty"`
+	APIKeyHeader string     `json:"apiKeyHeader,omitempty"`
+	HMACHeader   string     `json:"hmacHeader,omitempty"`
+	HMACSecret   string     `json:"hmacSecret,omitempty"`
+}
+
 type Webhook struct {
-	ID            string   `json:"id"`
-	Name          string   `json:"name"`
-	URL           string   `json:"url"`
-	AppID         string   `json:"app"`
-	Secret        string   `json:"secret"`
-	CustomHeaders []Header `json:"customHeaders"`
-	Headers       []Header `json:"headers"`
-	CreatedAt     string   `json:"createdAt"`
-	UpdatedAt     string   `json:"updatedAt"`
+	ID            string       `json:"id"`
+	Name          string       `json:"name"`
+	URL           string       `json:"url"`
+	AppID         string       `json:"app"`
+	Secret        string       `json:"secret"`
+	CustomHeaders []Header     `json:"customHeaders"`
+	Headers       []Header     `json:"headers"`
+	Auth          *WebhookAuth `json:"auth,omitempty"`
+	CreatedAt     string       `json:"createdAt"`
+	UpdatedAt     string       `json:"updatedAt"`
 }
 
 type Header struct {
@@ -36,6 +55,16 @@ type CreateWebhookRequest struct {
 	URL           string   `json:"url"`
 	AppID         string   `json:"appId"`
 	CustomHeaders []Header `json:"customHeaders,omitempty"`
+	AuthMethod    string   `json:"authMethod,omitempty"`
+	// Basic Auth
+	UserName string `json:"userName,omitempty"`
+	Password string `json:"password,omitempty"`
+	// API Key Auth
+	APIKey       string `json:"apiKey,omitempty"`
+	APIKeyHeader string `json:"apiKeyHeader,omitempty"`
+	// HMAC Auth
+	HMACHeader string `json:"hmacHeader,omitempty"`
+	HMACSecret string `json:"hmacSecret,omitempty"`
 }
 
 type WebhookResponse struct {
@@ -50,11 +79,66 @@ type WebhookListResponse struct {
 	Success bool      `json:"success"`
 }
 
+func validateWebhookAuth(req *CreateWebhookRequest) error {
+	if req.AuthMethod == "" {
+		return nil
+	}
+
+	switch AuthMethod(req.AuthMethod) {
+	case AuthMethodBasic:
+		if req.UserName == "" || req.Password == "" {
+			return errors.New("for basic auth, userName and password are required")
+		}
+	case AuthMethodHMAC:
+		if req.HMACHeader == "" || req.HMACSecret == "" {
+			return errors.New("for hmac auth, hmacHeader and hmacSecret are required")
+		}
+	case AuthMethodAPIKey:
+		if req.APIKey == "" || req.APIKeyHeader == "" {
+			return errors.New("for apiKey auth, apiKey and apiKeyHeader are required")
+		}
+	default:
+		return fmt.Errorf("invalid auth method: %s", req.AuthMethod)
+	}
+
+	return nil
+}
+
 func (s *WebhookService) Create(ctx context.Context, req *CreateWebhookRequest) (*WebhookResponse, error) {
+	if err := validateWebhookAuth(req); err != nil {
+		return nil, err
+	}
+
+	// Convert the flattened request to the internal structure
+	requestBody := struct {
+		Name          string       `json:"name"`
+		URL           string       `json:"url"`
+		AppID         string       `json:"appId"`
+		CustomHeaders []Header     `json:"customHeaders,omitempty"`
+		Auth          *WebhookAuth `json:"auth,omitempty"`
+	}{
+		Name:          req.Name,
+		URL:           req.URL,
+		AppID:         req.AppID,
+		CustomHeaders: req.CustomHeaders,
+	}
+
+	if req.AuthMethod != "" {
+		requestBody.Auth = &WebhookAuth{
+			Method:       AuthMethod(req.AuthMethod),
+			UserName:     req.UserName,
+			Password:     req.Password,
+			APIKey:       req.APIKey,
+			APIKeyHeader: req.APIKeyHeader,
+			HMACHeader:   req.HMACHeader,
+			HMACSecret:   req.HMACSecret,
+		}
+	}
+
 	resp := &WebhookResponse{}
 	_, err := s.client.resty.R().
 		SetContext(ctx).
-		SetBody(req).
+		SetBody(requestBody).
 		SetResult(resp).
 		Post("/webhooks")
 	if err != nil {

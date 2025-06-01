@@ -18,11 +18,191 @@ func newMockWebhookService() (*WebhookService, *resty.Client) {
 	return &WebhookService{client: c}, r
 }
 
+func TestWebhookAuth_Validation(t *testing.T) {
+	tests := []struct {
+		name          string
+		request       *CreateWebhookRequest
+		expectedError string
+	}{
+		{
+			name: "Valid Basic Auth",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodBasic),
+				UserName:   "user",
+				Password:   "pass",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Invalid Basic Auth - Missing Username",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodBasic),
+				Password:   "pass",
+			},
+			expectedError: "for basic auth, userName and password are required",
+		},
+		{
+			name: "Invalid Basic Auth - Missing Password",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodBasic),
+				UserName:   "user",
+			},
+			expectedError: "for basic auth, userName and password are required",
+		},
+		{
+			name: "Valid API Key Auth",
+			request: &CreateWebhookRequest{
+				Name:         "Test",
+				URL:          "http://example.com",
+				AppID:        "appId",
+				AuthMethod:   string(AuthMethodAPIKey),
+				APIKey:       "key123",
+				APIKeyHeader: "X-API-Key",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Invalid API Key Auth - Missing Key",
+			request: &CreateWebhookRequest{
+				Name:         "Test",
+				URL:          "http://example.com",
+				AppID:        "appId",
+				AuthMethod:   string(AuthMethodAPIKey),
+				APIKeyHeader: "X-API-Key",
+			},
+			expectedError: "for apiKey auth, apiKey and apiKeyHeader are required",
+		},
+		{
+			name: "Valid HMAC Auth",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodHMAC),
+				HMACHeader: "X-Signature",
+				HMACSecret: "secret123",
+			},
+			expectedError: "",
+		},
+		{
+			name: "Invalid HMAC Auth - Missing Secret",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodHMAC),
+				HMACHeader: "X-Signature",
+			},
+			expectedError: "for hmac auth, hmacHeader and hmacSecret are required",
+		},
+		{
+			name: "Invalid Auth Method",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: "invalid",
+			},
+			expectedError: "invalid auth method: invalid",
+		},
+		{
+			name: "No Auth",
+			request: &CreateWebhookRequest{
+				Name:  "Test",
+				URL:   "http://example.com",
+				AppID: "appId",
+			},
+			expectedError: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateWebhookAuth(tt.request)
+			if tt.expectedError == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Equal(t, tt.expectedError, err.Error())
+			}
+		})
+	}
+}
+
 func TestWebhookService_Create(t *testing.T) {
 	ws, _ := newMockWebhookService()
 	ctx := context.Background()
-	_, err := ws.Create(ctx, &CreateWebhookRequest{Name: "Test", URL: "http://example.com", AppID: "appId"})
-	assert.Error(t, err)
+
+	tests := []struct {
+		name          string
+		request       *CreateWebhookRequest
+		expectedError bool
+	}{
+		{
+			name: "Basic request without auth",
+			request: &CreateWebhookRequest{
+				Name:  "Test",
+				URL:   "http://example.com",
+				AppID: "appId",
+			},
+			expectedError: true, // Because the mock client will fail
+		},
+		{
+			name: "Request with valid basic auth",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodBasic),
+				UserName:   "user",
+				Password:   "pass",
+			},
+			expectedError: true, // Because the mock client will fail
+		},
+		{
+			name: "Request with invalid auth",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodBasic),
+				// Missing username and password
+			},
+			expectedError: true,
+		},
+		{
+			name: "Request with HMAC auth",
+			request: &CreateWebhookRequest{
+				Name:       "Test",
+				URL:        "http://example.com",
+				AppID:      "appId",
+				AuthMethod: string(AuthMethodHMAC),
+				HMACHeader: "X-Signature",
+				HMACSecret: "secret123",
+			},
+			expectedError: true, // Because the mock client will fail
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := ws.Create(ctx, tt.request)
+			if tt.expectedError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestWebhookService_GetAll(t *testing.T) {
