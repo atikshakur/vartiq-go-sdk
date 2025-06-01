@@ -113,9 +113,8 @@ The WebhookMessage service allows you to programmatically send messages to your 
 
 ```go
 // Create a webhook message
-msgResp, err := client.WebhookMessage.Create(ctx, &vartiq.CreateWebhookMessageRequest{
-	AppID:   "APP_ID",
-	Payload: map[string]interface{}{"hello": "world"},
+message, err := client.WebhookMessage.Create(ctx, "APP_ID", map[string]interface{}{
+	"hello": "world",
 })
 ```
 

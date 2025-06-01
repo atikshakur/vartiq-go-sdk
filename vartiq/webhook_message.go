@@ -17,26 +17,30 @@ type WebhookMessage struct {
 	UpdatedAt string      `json:"updatedAt"`
 }
 
-type CreateWebhookMessageRequest struct {
-	AppID   string      `json:"appId"`
-	Payload interface{} `json:"payload"`
+type webhookMessageResponse struct {
+	Data    WebhookMessage `json:"data"`
+	Message string         `json:"message"`
+	Success bool           `json:"success"`
 }
 
-type CreateWebhookMessageResponse struct {
-	Data    map[string]interface{} `json:"data"`
-	Message string                 `json:"message"`
-	Success bool                   `json:"success"`
-}
-
-func (s *WebhookMessageService) Create(ctx context.Context, req *CreateWebhookMessageRequest) (*CreateWebhookMessageResponse, error) {
-	resp := &CreateWebhookMessageResponse{}
+// Create sends a message to a webhook. The payload can be any JSON-serializable value.
+// Example:
+//
+//	message, err := client.WebhookMessage.Create(ctx, "APP_ID", map[string]interface{}{
+//	    "hello": "world",
+//	})
+func (s *WebhookMessageService) Create(ctx context.Context, appID string, payload interface{}) (*WebhookMessage, error) {
+	resp := &webhookMessageResponse{}
 	_, err := s.client.resty.R().
 		SetContext(ctx).
-		SetBody(req).
+		SetBody(map[string]interface{}{
+			"appId":   appID,
+			"payload": payload,
+		}).
 		SetResult(resp).
 		Post("/webhook-messages")
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	return &resp.Data, nil
 }
