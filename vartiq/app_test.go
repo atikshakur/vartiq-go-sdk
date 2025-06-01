@@ -18,14 +18,17 @@ func newMockAppService() (*AppService, *resty.Client) {
 func TestAppService_Create(t *testing.T) {
 	as, _ := newMockAppService()
 	ctx := context.Background()
-	_, err := as.Create(ctx, &CreateAppRequest{Name: "Test", Environment: "dev"})
+	_, err := as.Create(ctx, &CreateAppRequest{
+		Name:      "Test",
+		ProjectID: "project-123",
+	})
 	assert.Error(t, err) // No server, should error
 }
 
 func TestAppService_List(t *testing.T) {
 	as, _ := newMockAppService()
 	ctx := context.Background()
-	_, err := as.List(ctx)
+	_, err := as.List(ctx, "project-123")
 	assert.Error(t, err)
 }
 

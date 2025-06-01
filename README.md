@@ -18,8 +18,6 @@ import (
 )
 
 client := vartiq.New("YOUR_API_KEY")
-// Optionally, override the API URL:
-// client := vartiq.New("YOUR_API_KEY", "https://api.eu.vartiq.com")
 ```
 
 ### Go Types
@@ -64,12 +62,12 @@ err := client.Project.Delete(ctx, "PROJECT_ID")
 ```go
 // Create an app
 appResp, err := client.App.Create(ctx, &vartiq.CreateAppRequest{
-	Name:        "App Name",
-	Environment: "development",
+	Name:      "App Name",
+	ProjectID: "PROJECT_ID",
 })
 
-// Get all apps
-apps, err := client.App.List(ctx)
+// Get all apps for a project
+apps, err := client.App.List(ctx, "PROJECT_ID")
 
 // Get a single app
 app, err := client.App.Get(ctx, "APP_ID")
@@ -170,16 +168,3 @@ msgResp, err := client.WebhookMessage.Create(ctx, &vartiq.CreateWebhookMessageRe
 	Payload:   map[string]interface{}{ "hello": "world" },
 })
 ```
-
-## Supported Resources
-- Project
-- App
-- Webhook
-- Webhook Message
-
-## API Key
-You must provide your API key when creating the client:
-
-```go
-client := vartiq.New("https://api.vartiq.com", "your_api_key")
-``` 
