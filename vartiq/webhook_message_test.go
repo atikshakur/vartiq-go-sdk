@@ -18,6 +18,6 @@ func newMockWebhookMessageService() (*WebhookMessageService, *resty.Client) {
 func TestWebhookMessageService_Create(t *testing.T) {
 	wms, _ := newMockWebhookMessageService()
 	ctx := context.Background()
-	_, err := wms.Create(ctx, &CreateWebhookMessageRequest{WebhookID: "webhookId", Payload: map[string]interface{}{}})
+	_, err := wms.Create(ctx, &CreateWebhookMessageRequest{AppID: "appId", Payload: map[string]interface{}{}})
 	assert.Error(t, err)
 }

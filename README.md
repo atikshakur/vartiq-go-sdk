@@ -107,7 +107,19 @@ updated, err := client.Webhook.Update(ctx, "WEBHOOK_ID", map[string]interface{}{
 err := client.Webhook.Delete(ctx, "WEBHOOK_ID")
 ```
 
-#### Webhook Verification
+### Webhook Message
+
+The WebhookMessage service allows you to programmatically send messages to your webhooks.
+
+```go
+// Create a webhook message
+msgResp, err := client.WebhookMessage.Create(ctx, &vartiq.CreateWebhookMessageRequest{
+	AppID:   "APP_ID",
+	Payload: map[string]interface{}{"hello": "world"},
+})
+```
+
+### Webhook Verification
 
 To verify a webhook signature, you can use the `Verify` method. This is useful for ensuring that incoming webhooks are genuinely from Vartiq and have not been tampered with.
 
@@ -158,13 +170,3 @@ func handleWebhook(w http.ResponseWriter, req *http.Request) {
 ```
 
 The `Verify` function returns the original payload bytes if the signature is valid. If the signature is invalid or missing, it returns an error.
-
-### Webhook Message
-
-```go
-// Create a webhook message
-msgResp, err := client.WebhookMessage.Create(ctx, &vartiq.CreateWebhookMessageRequest{
-	WebhookID: "WEBHOOK_ID",
-	Payload:   map[string]interface{}{ "hello": "world" },
-})
-```
