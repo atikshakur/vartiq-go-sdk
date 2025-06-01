@@ -117,8 +117,9 @@ msgResp, err := client.WebhookMessage.Create(ctx, &vartiq.CreateWebhookMessageRe
 	AppID:   "APP_ID",
 	Payload: map[string]interface{}{"hello": "world"},
 })
+```
 
-#### Webhook Verification
+### Webhook Verification
 
 To verify a webhook signature, you can use the `Verify` method. This is useful for ensuring that incoming webhooks are genuinely from Vartiq and have not been tampered with.
 
