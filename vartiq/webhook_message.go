@@ -10,7 +10,7 @@ type WebhookMessageService struct {
 
 type WebhookMessage struct {
 	ID        string      `json:"id"`
-	WebhookID string      `json:"webhook"`
+	AppID     string      `json:"app"`
 	Payload   interface{} `json:"payload"`
 	Signature string      `json:"signature"`
 	CreatedAt string      `json:"createdAt"`
@@ -18,8 +18,8 @@ type WebhookMessage struct {
 }
 
 type CreateWebhookMessageRequest struct {
-	WebhookID string      `json:"webhookId"`
-	Payload   interface{} `json:"payload"`
+	AppID   string      `json:"appId"`
+	Payload interface{} `json:"payload"`
 }
 
 type CreateWebhookMessageResponse struct {
