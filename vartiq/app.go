@@ -12,7 +12,6 @@ type App struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Environment string `json:"environment"`
 	Company     string `json:"company"`
 	CreatedAt   string `json:"createdAt"`
 	UpdatedAt   string `json:"updatedAt"`
@@ -20,7 +19,7 @@ type App struct {
 
 type CreateAppRequest struct {
 	Name        string `json:"name"`
-	Environment string `json:"environment"`
+	ProjectID   string `json:"projectId"`
 	Description string `json:"description,omitempty"`
 }
 
@@ -43,8 +42,8 @@ func (s *AppService) Create(ctx context.Context, req *CreateAppRequest) (*Create
 	return resp, nil
 }
 
-// List all apps
-func (s *AppService) List(ctx context.Context) ([]App, error) {
+// List all apps for a project
+func (s *AppService) List(ctx context.Context, projectID string) ([]App, error) {
 	resp := &struct {
 		Data    []App  `json:"data"`
 		Message string `json:"message"`
@@ -53,7 +52,7 @@ func (s *AppService) List(ctx context.Context) ([]App, error) {
 	_, err := s.client.resty.R().
 		SetContext(ctx).
 		SetResult(resp).
-		Get("/apps")
+		Get("/apps?projectId=" + projectID)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +80,6 @@ func (s *AppService) Get(ctx context.Context, appID string) (*App, error) {
 type UpdateAppRequest struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
-	Environment string `json:"environment,omitempty"`
 }
 
 // Update an app by ID
