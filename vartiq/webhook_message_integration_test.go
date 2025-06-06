@@ -90,11 +90,13 @@ func TestWebhookMessageIntegration(t *testing.T) {
 			message, err := client.WebhookMessage.Create(ctx, appID, tc.payload)
 			require.NoError(t, err)
 			require.NotNil(t, message)
-			assert.Equal(t, appID, message.AppID)
-			assert.NotEmpty(t, message.ID)
-			assert.NotEmpty(t, message.CreatedAt)
-			assert.NotEmpty(t, message.Signature)
-			assert.Equal(t, tc.payload, message.Payload)
+			assert.Equal(t, appID, message.Data.AppID)
+			assert.NotEmpty(t, message.Data.ID)
+			assert.NotEmpty(t, message.Data.CreatedAt)
+			assert.NotEmpty(t, message.Data.Signature)
+			assert.Equal(t, tc.payload, message.Data.Payload)
+			assert.True(t, message.Success)
+			assert.NotEmpty(t, message.Message)
 		})
 	}
 }

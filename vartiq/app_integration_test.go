@@ -47,21 +47,25 @@ func TestAppIntegration(t *testing.T) {
 	// Test App Get
 	retrieved, err := client.App.Get(ctx, appID)
 	require.NoError(t, err)
-	assert.Equal(t, appID, retrieved.ID)
-	assert.Equal(t, appName, retrieved.Name)
+	assert.Equal(t, appID, retrieved.Data.ID)
+	assert.Equal(t, appName, retrieved.Data.Name)
+	assert.True(t, retrieved.Success)
+	assert.NotEmpty(t, retrieved.Message)
 
 	// Test App List
 	apps, err := client.App.List(ctx, projectID)
 	require.NoError(t, err)
-	assert.NotEmpty(t, apps)
+	assert.NotEmpty(t, apps.Data)
 	found := false
-	for _, a := range apps {
+	for _, a := range apps.Data {
 		if a.ID == appID {
 			found = true
 			break
 		}
 	}
 	assert.True(t, found, "Created app not found in list")
+	assert.True(t, apps.Success)
+	assert.NotEmpty(t, apps.Message)
 
 	// Test App Update
 	updatedName := "Updated " + appName
@@ -69,5 +73,7 @@ func TestAppIntegration(t *testing.T) {
 		Name: updatedName,
 	})
 	require.NoError(t, err)
-	assert.Equal(t, updatedName, updated.Name)
+	assert.Equal(t, updatedName, updated.Data.Name)
+	assert.True(t, updated.Success)
+	assert.NotEmpty(t, updated.Message)
 }

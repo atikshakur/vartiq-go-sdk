@@ -42,7 +42,11 @@ func (s *ProjectService) Create(ctx context.Context, req *CreateProjectRequest) 
 }
 
 // List all projects
-func (s *ProjectService) List(ctx context.Context) ([]Project, error) {
+func (s *ProjectService) List(ctx context.Context) (*struct {
+	Data    []Project `json:"data"`
+	Message string    `json:"message"`
+	Success bool      `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    []Project `json:"data"`
 		Message string    `json:"message"`
@@ -55,11 +59,15 @@ func (s *ProjectService) List(ctx context.Context) ([]Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	return resp.Data, nil
+	return resp, nil
 }
 
 // Get a single project by ID
-func (s *ProjectService) Get(ctx context.Context, projectID string) (*Project, error) {
+func (s *ProjectService) Get(ctx context.Context, projectID string) (*struct {
+	Data    Project `json:"data"`
+	Message string  `json:"message"`
+	Success bool    `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    Project `json:"data"`
 		Message string  `json:"message"`
@@ -72,7 +80,7 @@ func (s *ProjectService) Get(ctx context.Context, projectID string) (*Project, e
 	if err != nil {
 		return nil, err
 	}
-	return &resp.Data, nil
+	return resp, nil
 }
 
 // UpdateProjectRequest is used for updating a project
@@ -82,7 +90,11 @@ type UpdateProjectRequest struct {
 }
 
 // Update a project by ID
-func (s *ProjectService) Update(ctx context.Context, projectID string, req *UpdateProjectRequest) (*Project, error) {
+func (s *ProjectService) Update(ctx context.Context, projectID string, req *UpdateProjectRequest) (*struct {
+	Data    Project `json:"data"`
+	Message string  `json:"message"`
+	Success bool    `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    Project `json:"data"`
 		Message string  `json:"message"`
@@ -96,7 +108,7 @@ func (s *ProjectService) Update(ctx context.Context, projectID string, req *Upda
 	if err != nil {
 		return nil, err
 	}
-	return &resp.Data, nil
+	return resp, nil
 }
 
 // Delete a project by ID

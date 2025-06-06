@@ -69,6 +69,8 @@ func TestWebhookIntegration(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, webhookID, retrieved.Data.ID)
 	assert.Equal(t, webhookName, retrieved.Data.Name)
+	assert.True(t, retrieved.Success)
+	assert.NotEmpty(t, retrieved.Message)
 
 	// Test Webhook List
 	webhooks, err := client.Webhook.GetAll(ctx, appID)
@@ -82,6 +84,8 @@ func TestWebhookIntegration(t *testing.T) {
 		}
 	}
 	assert.True(t, found, "Created webhook not found in list")
+	assert.True(t, webhooks.Success)
+	assert.NotEmpty(t, webhooks.Message)
 
 	// Test Webhook Update
 	updatedName := "Updated " + webhookName
@@ -90,6 +94,8 @@ func TestWebhookIntegration(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.Equal(t, updatedName, updated.Data.Name)
+	assert.True(t, updated.Success)
+	assert.NotEmpty(t, updated.Message)
 
 	// Test Webhook Verification
 	payload := []byte(`{"test":"data"}`)

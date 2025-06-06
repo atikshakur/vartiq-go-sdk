@@ -43,7 +43,11 @@ func (s *AppService) Create(ctx context.Context, req *CreateAppRequest) (*Create
 }
 
 // List all apps for a project
-func (s *AppService) List(ctx context.Context, projectID string) ([]App, error) {
+func (s *AppService) List(ctx context.Context, projectID string) (*struct {
+	Data    []App  `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    []App  `json:"data"`
 		Message string `json:"message"`
@@ -56,11 +60,15 @@ func (s *AppService) List(ctx context.Context, projectID string) ([]App, error) 
 	if err != nil {
 		return nil, err
 	}
-	return resp.Data, nil
+	return resp, nil
 }
 
 // Get a single app by ID
-func (s *AppService) Get(ctx context.Context, appID string) (*App, error) {
+func (s *AppService) Get(ctx context.Context, appID string) (*struct {
+	Data    App    `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    App    `json:"data"`
 		Message string `json:"message"`
@@ -73,7 +81,7 @@ func (s *AppService) Get(ctx context.Context, appID string) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &resp.Data, nil
+	return resp, nil
 }
 
 // UpdateAppRequest is used for updating an app
@@ -83,7 +91,11 @@ type UpdateAppRequest struct {
 }
 
 // Update an app by ID
-func (s *AppService) Update(ctx context.Context, appID string, req *UpdateAppRequest) (*App, error) {
+func (s *AppService) Update(ctx context.Context, appID string, req *UpdateAppRequest) (*struct {
+	Data    App    `json:"data"`
+	Message string `json:"message"`
+	Success bool   `json:"success"`
+}, error) {
 	resp := &struct {
 		Data    App    `json:"data"`
 		Message string `json:"message"`
@@ -97,7 +109,7 @@ func (s *AppService) Update(ctx context.Context, appID string, req *UpdateAppReq
 	if err != nil {
 		return nil, err
 	}
-	return &resp.Data, nil
+	return resp, nil
 }
 
 // Delete an app by ID

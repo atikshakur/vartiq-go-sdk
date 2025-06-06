@@ -48,13 +48,19 @@ type webhookMessageResponse struct {
 	Success bool   `json:"success"`
 }
 
+type WebhookMessageResponse struct {
+	Data    WebhookMessage `json:"data"`
+	Message string         `json:"message"`
+	Success bool           `json:"success"`
+}
+
 // Create sends a message to a webhook. The payload can be any JSON-serializable value.
 // Example:
 //
 //	message, err := client.WebhookMessage.Create(ctx, "APP_ID", map[string]interface{}{
 //	    "hello": "world",
 //	})
-func (s *WebhookMessageService) Create(ctx context.Context, appID string, payload interface{}) (*WebhookMessage, error) {
+func (s *WebhookMessageService) Create(ctx context.Context, appID string, payload interface{}) (*WebhookMessageResponse, error) {
 	resp := &webhookMessageResponse{}
 	httpResp, err := s.client.resty.R().
 		SetContext(ctx).
@@ -97,7 +103,7 @@ func (s *WebhookMessageService) Create(ctx context.Context, appID string, payloa
 		}
 	}
 
-	message := &WebhookMessage{
+	message := WebhookMessage{
 		ID:          rawMessage.ID,
 		AppID:       appID, // Use the provided appID
 		Payload:     parsedPayload,
@@ -107,5 +113,9 @@ func (s *WebhookMessageService) Create(ctx context.Context, appID string, payloa
 		UpdatedAt:   rawMessage.UpdatedAt,
 	}
 
-	return message, nil
+	return &WebhookMessageResponse{
+		Data:    message,
+		Message: resp.Message,
+		Success: resp.Success,
+	}, nil
 }
