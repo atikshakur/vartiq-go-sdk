@@ -98,7 +98,7 @@ func TestWebhookIntegration(t *testing.T) {
 	mac.Write(payload)
 	signature := hex.EncodeToString(mac.Sum(nil))
 
-	verifiedPayload, err := client.Webhook.Verify(payload, signature, secret)
+	verifiedPayload, err := client.Verify(payload, signature, secret)
 	require.NoError(t, err)
 	assert.Equal(t, payload, verifiedPayload)
 }

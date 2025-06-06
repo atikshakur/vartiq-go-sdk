@@ -151,7 +151,7 @@ func handleWebhook(w http.ResponseWriter, req *http.Request) {
 
 	defer req.Body.Close()
 
-	verifiedPayload, err := client.Webhook.Verify(payload, signature, webhookSecret)
+	verifiedPayload, err := client.Verify(payload, signature, webhookSecret)
 	if err != nil {
 		// Signature is invalid
 		fmt.Printf("Webhook verification failed: %v\n", err)

@@ -234,7 +234,7 @@ func TestWebhookService_Delete(t *testing.T) {
 }
 
 func TestWebhookService_Verify(t *testing.T) {
-	ws, _ := newMockWebhookService()
+	client := New("test-key")
 
 	secret := "testsecret"
 	payload := []byte("testpayload")
@@ -295,7 +295,7 @@ func TestWebhookService_Verify(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			verifiedPayload, err := ws.Verify(tt.payload, tt.signature, tt.secret)
+			verifiedPayload, err := client.Verify(tt.payload, tt.signature, tt.secret)
 
 			if tt.expectedError {
 				assert.Error(t, err)
